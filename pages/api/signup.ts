@@ -25,6 +25,26 @@ export default async function handler(
   if (!email || !password || !name) {
     return res.status(400).json({ error: "Missing required fields" });
   }
+
+  /* validate inputs */
+  // validate email
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    return res.status(400).json({ error: "Invalid email" });
+  // validate password
+  if (
+    !/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/.test(
+      password
+    )
+  ) {
+    return res.status(400).json({
+      error:
+        "Password must include at least one uppercase letter, one lowercase letter, one number and one special character",
+    });
+  }
+  // validate name
+  if (!/^[a-zA-Z ]{2,30}$/.test(name))
+    return res.status(400).json({ error: "Invalid name" });
+
   const user = await prisma.user.findUnique({
     where: { email },
   });
