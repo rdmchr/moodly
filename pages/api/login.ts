@@ -39,6 +39,6 @@ export default async function handler(
   const token = jwt.sign({ userId: user.id, name: user.name }, jwtSecret);
   return res
     .status(200)
-    .setHeader("Set-Cookie", `Authorization=${token}; HttpOnly; Secure`)
+    .setHeader("Set-Cookie", `Authorization=${token}; HttpOnly; Path=/`)
     .json({ user: { id: user.id, name: user.name, email: user.email, verified: user.verified } });
 }

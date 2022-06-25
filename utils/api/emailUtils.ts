@@ -1,12 +1,30 @@
+import { PrismaClient } from "@prisma/client";
 import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
 
 const baseUrl = process.env.BASE_URL as string;
 export async function sendVerificationEmail(
   email: string,
   name: string,
-  token: string,
   userId: string
 ) {
+  const prisma = new PrismaClient();
+  const token = jwt.sign(
+    { userId, token: Math.random().toString(36) },
+    process.env.JWT_SECRET as string
+  );
+
+  const verification = await prisma.verification.create({
+    data: {
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+      token,
+    },
+  });
+
   const text = `Hey ${name},\n\n Please verify your email using the link below: \n\n ${baseUrl}/verify?token=${token}&userId=${userId} \n\n This link expires in one hour, if you didn't request this email, please ignore it.`;
 
   await sendEmail(email, "Please verify your email", text);

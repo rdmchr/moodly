@@ -11,13 +11,14 @@ datasource db {
 }
 
 model User {
-  id           String         @id @default(cuid())
-  name         String
-  email        String         @unique
-  password     String
-  verified     Boolean        @default(false)
-  days         Day[]
-  Verification Verification[]
+  id                          String         @id @default(cuid())
+  name                        String
+  email                       String         @unique
+  password                    String
+  verified                    Boolean        @default(false)
+  lastVerificationGeneratedAt DateTime       @default(now())
+  days                        Day[]
+  Verification                Verification[]
 }
 
 model Verification {

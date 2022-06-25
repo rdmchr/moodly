@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hash } from "bcrypt";
 import { sendVerificationEmail } from "../../utils/api/emailUtils";
+import jwt from "jsonwebtoken";
+import { createJWT } from "../../utils/api/authUtils";
 
 type Response = {
   error?: string;
@@ -67,25 +69,19 @@ export default async function handler(
     },
   });
 
-  const token = Math.random().toString(36).substr(2);
-  const verification = await prisma.verification.create({
-    data: {
-      user: {
-        connect: {
-          id: newUser.id,
-        },
-      },
-      token,
-    },
-  });
-  await sendVerificationEmail(email, name, token, newUser.id);
 
-  return res.status(200).json({
-    user: {
-      id: newUser.id,
-      email: newUser.email,
-      name: newUser.name,
-      verified: newUser.verified,
-    },
-  });
+  await sendVerificationEmail(email, name, newUser.id);
+  const jwtToken = await createJWT(newUser.id, name);
+
+  return res
+    .status(200)
+    .setHeader("Set-Cookie", `Authorization=${jwtToken}; HttpOnly`)
+    .json({
+      user: {
+        id: newUser.id,
+        email: newUser.email,
+        name: newUser.name,
+        verified: newUser.verified,
+      },
+    });
 }

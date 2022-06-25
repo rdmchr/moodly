@@ -9,6 +9,8 @@ export type User = {
   id: string;
   email: string;
   name: string;
+  verified: boolean;
+  lastEmailGenerated: Date;
 };
 
 /**
@@ -16,7 +18,9 @@ export type User = {
  * @param req The request object.
  */
 export async function getAuthenticatedUser(req: NextApiRequest) {
-  const token = req.headers.authorization;
+  const cookie = req.headers.cookie;
+  if (!cookie) return null;
+  const token = cookie.split('=')[1];
   if (!token) return null;
   const { userId, name } = jwt.verify(token, jwtSecret) as JwtPayload;
   if (!userId || !name) return null;
@@ -26,5 +30,17 @@ export async function getAuthenticatedUser(req: NextApiRequest) {
     id: user.id,
     email: user.email,
     name: user.name,
+    verified: user.verified,
+    lastVerificationGeneratedAt: user.lastVerificationGeneratedAt,
   };
+}
+
+/**
+ * Returns a new JWT token for a user.
+ * @param id the id of the user.
+ * @param name the name of the user.
+ */
+export async function createJWT(id: string, name: string) {
+  const jwtToken = jwt.sign({ userId: id, name: name }, jwtSecret);
+  return jwtToken;
 }
