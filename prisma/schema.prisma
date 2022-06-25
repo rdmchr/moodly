@@ -11,11 +11,21 @@ datasource db {
 }
 
 model User {
-  id       String @id @default(cuid())
-  name     String
-  email    String @unique
-  password String
-  days     Day[]
+  id           String         @id @default(cuid())
+  name         String
+  email        String         @unique
+  password     String
+  verified     Boolean        @default(false)
+  days         Day[]
+  Verification Verification[]
+}
+
+model Verification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  userId    String
+  createdAt DateTime @default(now())
 }
 
 model Day {

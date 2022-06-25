@@ -2,6 +2,7 @@
 import { PrismaClient } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hash } from "bcrypt";
+import { sendVerificationEmail } from "../../utils/api/emailUtils";
 
 type Response = {
   error?: string;
@@ -9,7 +10,8 @@ type Response = {
     id: string;
     name: string;
     email: string;
-  }
+    verified: boolean;
+  };
 };
 
 const prisma = new PrismaClient();
@@ -35,12 +37,12 @@ export default async function handler(
       error: "Password must be at least 8 characters long",
     });
   }
-  if (!new RegExp('^[0-9]').test(password)) {
+  if (!new RegExp("[0-9]").test(password)) {
     return res.status(400).json({
       error: "Password must contain at least one number",
     });
   }
-  if (!new RegExp('^[a-zA-Z]').test(password)) {
+  if (!new RegExp("[a-zA-Z]").test(password)) {
     return res.status(400).json({
       error: "Password must contain at least one letter",
     });
@@ -65,11 +67,25 @@ export default async function handler(
     },
   });
 
+  const token = Math.random().toString(36).substr(2);
+  const verification = await prisma.verification.create({
+    data: {
+      user: {
+        connect: {
+          id: newUser.id,
+        },
+      },
+      token,
+    },
+  });
+  await sendVerificationEmail(email, name, token, newUser.id);
+
   return res.status(200).json({
     user: {
       id: newUser.id,
       email: newUser.email,
       name: newUser.name,
-    }
+      verified: newUser.verified,
+    },
   });
 }

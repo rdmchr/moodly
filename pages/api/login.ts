@@ -10,6 +10,7 @@ type Data = {
     id: string;
     name: string;
     email: string;
+    verified: boolean;
   };
 };
 
@@ -39,5 +40,5 @@ export default async function handler(
   return res
     .status(200)
     .setHeader("Set-Cookie", `Authorization=${token}; HttpOnly; Secure`)
-    .json({ user: { id: user.id, name: user.name, email: user.email } });
+    .json({ user: { id: user.id, name: user.name, email: user.email, verified: user.verified } });
 }
