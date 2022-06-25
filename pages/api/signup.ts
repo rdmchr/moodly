@@ -3,14 +3,13 @@ import { PrismaClient } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hash } from "bcrypt";
 
-type Input = {
-  email: string;
-  password: string;
-  name: string;
-};
-
 type Response = {
   error?: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  }
 };
 
 const prisma = new PrismaClient();
@@ -31,14 +30,19 @@ export default async function handler(
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return res.status(400).json({ error: "Invalid email" });
   // validate password
-  if (
-    !/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$ %^&*-]).{8,}$/.test(
-      password
-    )
-  ) {
+  if (password.length < 8) {
     return res.status(400).json({
-      error:
-        "Password must include at least one uppercase letter, one lowercase letter, one number and one special character",
+      error: "Password must be at least 8 characters long",
+    });
+  }
+  if (!new RegExp('^[0-9]').test(password)) {
+    return res.status(400).json({
+      error: "Password must contain at least one number",
+    });
+  }
+  if (!new RegExp('^[a-zA-Z]').test(password)) {
+    return res.status(400).json({
+      error: "Password must contain at least one letter",
     });
   }
   // validate name
@@ -48,7 +52,6 @@ export default async function handler(
   const user = await prisma.user.findUnique({
     where: { email },
   });
-  console.log(user);
 
   if (user) return res.status(400).json({ error: "User already exists" });
 
@@ -62,5 +65,11 @@ export default async function handler(
     },
   });
 
-  return res.status(200).json({});
+  return res.status(200).json({
+    user: {
+      id: newUser.id,
+      email: newUser.email,
+      name: newUser.name,
+    }
+  });
 }

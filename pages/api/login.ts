@@ -6,6 +6,11 @@ import jwt from "jsonwebtoken";
 
 type Data = {
   error?: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 };
 
 const prisma = new PrismaClient();
@@ -30,6 +35,9 @@ export default async function handler(
   const isValid = await compare(password, user.password);
   if (!isValid) return res.status(400).json({ error: "Invalid password" });
 
-  const token = jwt.sign({userId: user.id, name: user.name}, jwtSecret);
-  return res.status(200).setHeader('authorization', token).json({});
+  const token = jwt.sign({ userId: user.id, name: user.name }, jwtSecret);
+  return res
+    .status(200)
+    .setHeader("Set-Cookie", `Authorization=${token}; HttpOnly; Secure`)
+    .json({ user: { id: user.id, name: user.name, email: user.email } });
 }
