@@ -42,7 +42,10 @@ const Verify: NextPage<Props> = ({error}) => {
 Verify.getInitialProps = async (ctx) => {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL as string;
   const { token, userId } = ctx.query;
-  const data = await fetch(`${baseUrl}/api/verify`, {
+  if (!token || !userId) {
+    return { error: "Invalid token" };
+  }
+  const data = await fetch(`${baseUrl}/api/v1/verify`, {
     method: "POST",
     body: JSON.stringify({
       token,
