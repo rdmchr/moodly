@@ -14,7 +14,6 @@ type Data = {
   };
 };
 
-const prisma = new PrismaClient();
 const jwtSecret = process.env.JWT_SECRET as string;
 
 export default async function handler(
@@ -28,9 +27,12 @@ export default async function handler(
     return res.status(400).json({ error: "Missing required fields" });
   }
 
+  const prisma = new PrismaClient();
   const user = await prisma.user.findUnique({
     where: { email },
   });
+  prisma.$disconnect();
+
   if (!user) return res.status(400).json({ error: "User does not exist" });
 
   const isValid = await compare(password, user.password);
@@ -40,5 +42,12 @@ export default async function handler(
   return res
     .status(200)
     .setHeader("Set-Cookie", `Authorization=${token}; HttpOnly; Path=/`)
-    .json({ user: { id: user.id, name: user.name, email: user.email, verified: user.verified } });
+    .json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        verified: user.verified,
+      },
+    });
 }

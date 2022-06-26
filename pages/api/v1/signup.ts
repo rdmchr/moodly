@@ -2,9 +2,9 @@
 import { PrismaClient } from "@prisma/client";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { hash } from "bcrypt";
-import { sendVerificationEmail } from "../../utils/api/emailUtils";
+import { sendVerificationEmail } from "../../../utils/api/emailUtils";
 import jwt from "jsonwebtoken";
-import { createJWT } from "../../utils/api/authUtils";
+import { createJWT } from "../../../utils/api/authUtils";
 
 type Response = {
   error?: string;
@@ -15,8 +15,6 @@ type Response = {
     verified: boolean;
   };
 };
-
-const prisma = new PrismaClient();
 
 export default async function handler(
   req: NextApiRequest,
@@ -53,11 +51,15 @@ export default async function handler(
   if (!/^[a-zA-Z ]{2,30}$/.test(name))
     return res.status(400).json({ error: "Invalid name" });
 
+  const prisma = new PrismaClient();
   const user = await prisma.user.findUnique({
     where: { email },
   });
 
-  if (user) return res.status(400).json({ error: "User already exists" });
+  if (user) {
+    prisma.$disconnect();
+    return res.status(400).json({ error: "User already exists" });
+  }
 
   const hashedPassword = await hash(password, 10);
 
@@ -68,7 +70,7 @@ export default async function handler(
       name,
     },
   });
-
+  prisma.$disconnect();
 
   await sendVerificationEmail(email, name, newUser.id);
   const jwtToken = await createJWT(newUser.id, name);
