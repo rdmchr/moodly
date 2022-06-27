@@ -1,12 +1,34 @@
 import type { NextPage } from "next";
 import { ErrorMessage, Field, Form, Formik, isObject } from "Formik";
 import { stringify, stringifyUrl } from "query-string";
+import { useState } from "react";
+import userStore from "../dataStores/userStore";
+import router, { useRouter } from 'next/router';
+import CarbonClose from "../icons/CarbonClose";
 
-type LoginResponse = {
-    error: string;
+export type LoginResponse = {
+    error?: string;
+    user?: {
+        id: string,
+        email: string,
+        name: string,
+        verified: boolean
+    }
+}
+type Props = {
+    message: string,
+    alter: (param:string) => void
 }
 
 const Login: NextPage = () => {
+    const { name, setName, email, setEmail } = userStore();
+    const router = useRouter();
+    const [serverError, setServerError] = useState("");
+
+    function alterServerError(param:string) {
+        setServerError(param);
+    }
+
     return (
         <div className="w-screen h-screen">
             <div className="grid w-screen h-1/5 bg-red-300 place-items-center">
@@ -14,9 +36,9 @@ const Login: NextPage = () => {
             </div>
             <div className="grid w-screen h-4/5 place-items-center grid-rows-2">
                 <Formik
-                    initialValues={{ name: '', email: '', password: '', check: ''}}
+                    initialValues={{ name: '', email: '', password: '', check: '' }}
                     validate={values => {
-                        const errors: { email?: any, password?: any, name?:any, check?:any } = {};
+                        const errors: { email?: any, password?: any, name?: any, check?: any } = {};
                         if (!values.email) {
                             errors.email = 'Required'
                         } else if (
@@ -24,14 +46,16 @@ const Login: NextPage = () => {
                         ) {
                             errors.email = 'Invalid email address';
                         }
-                        if(values.password !== values.check) {
+                        if (values.password !== values.check) {
                             errors.check = 'The passwords do not match';
-                         }
+                        }
                         return errors;
                     }}
-                    onSubmit={ async (values, { setSubmitting }) => {
+                    onSubmit={async (values, { setSubmitting }) => {
+                        let err:boolean = false;
+
                         try {
-                            const response : Response = await fetch('/api/signup', {
+                            const response: Response = await fetch('/api/v1/signup', {
                                 method: 'POST',
                                 body: stringify({
                                     name: values.name,
@@ -44,19 +68,29 @@ const Login: NextPage = () => {
                                 }
                             })
 
-                            if(!response.ok) {
-                                console.log( await response.json());
-                                throw new Error(`Error! status: ${response.status}`);
+                            const result: LoginResponse = (await response.json()) as LoginResponse;
+                            
+
+                            if (result.error) {
+                                setServerError(result.error);
+                                err = true;
+                            }
+                            if (result.user) {
+                                setName(result.user.name);
+                                setEmail(result.user.email);
+                                err = false;
                             }
 
-                            const result: LoginResponse = (await response.json()) as LoginResponse;
-                            console.log('result is: ', JSON.stringify(result, null, 4));
                         } catch (error) {
-                            if(error instanceof Error) {
+                            if (error instanceof Error) {
                                 console.log('error message: ', error.message);
                             } else {
                                 console.log('unexpected error: ', error);
                             }
+                        }
+
+                        if (!err) {
+                            router.push('/emailVerification');
                         }
                     }}
                 >
@@ -85,7 +119,7 @@ const Login: NextPage = () => {
                                 <Field type="password" name="check" className="input" />
                             </label>
                             <ErrorMessage name="check" component="div" className="text-red-400" />
-                            <br/>
+                            <br />
                             <button type="submit" disabled={isSubmitting} className="text border-2 border-black p-1 px-2 rounded-lg mt-3 float-right">
                                 Signup
                             </button>
@@ -93,8 +127,23 @@ const Login: NextPage = () => {
                     )}
                 </Formik>
             </div>
+            {serverError ? <ServerErrorPopUp message={serverError} alter={alterServerError} /> : <></>}
         </div>
     );
 };
+
+export function ServerErrorPopUp({ message, alter }: Props) {
+    return (
+        <div className="absolute top-0 left-0 w-[100vw] backdrop-brightness-50 backdrop-grayscale h-[100vh]">
+            <div className="bg absolute inset-x-1/2 inset-y-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] h-max px-2 py-2 bg-white">
+                <CarbonClose className="icon text-3xl bg-red-300" onClick={() => alter("")} />
+                <h1 className="text text-center text-xl mt-2">The following error occured</h1>
+                <p className="text clear-both text-center text-m mt-2">
+                    {message}
+                </p>
+            </div>
+        </div>
+    )
+}
 
 export default Login;
