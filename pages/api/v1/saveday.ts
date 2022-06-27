@@ -37,7 +37,7 @@ export default async function handler(
     return res.status(400).json({ error: "Rating must be between 1 and 5" });
   }
 
-  if (!/^[0-9]{5,5}-[0-9]{3,3}-[0-9]{3,3}$/.test(date)) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     return res.status(400).json({ error: "Invalid date" });
   }
 

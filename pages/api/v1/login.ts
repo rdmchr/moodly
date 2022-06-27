@@ -41,7 +41,7 @@ export default async function handler(
   const token = jwt.sign({ userId: user.id, name: user.name }, jwtSecret);
   return res
     .status(200)
-    .setHeader("Set-Cookie", `Authorization=${token}; HttpOnly; Path=/`)
+    .setHeader("Set-Cookie", `Authorization=${token}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 7}`)
     .json({
       user: {
         id: user.id,

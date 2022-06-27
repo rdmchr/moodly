@@ -77,7 +77,7 @@ export default async function handler(
 
   return res
     .status(200)
-    .setHeader("Set-Cookie", `Authorization=${jwtToken}; HttpOnly`)
+    .setHeader("Set-Cookie", `Authorization=${jwtToken}; HttpOnly; Path=/; Max-Age=${60 * 60 * 24 * 7}`)
     .json({
       user: {
         id: newUser.id,
