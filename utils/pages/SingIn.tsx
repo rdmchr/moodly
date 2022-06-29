@@ -1,13 +1,19 @@
 import type { NextPage } from "next";
 import { ErrorMessage, Field, Form, Formik } from "Formik";
 import { stringify, stringifyUrl } from "query-string";
-import userStore from "../dataStores/userStore";
-import { ServerErrorPopUp } from './signup';
-import { LoginResponse } from "./signup";
-import { useRouter } from "next/router";
+import userStore from "../../dataStores/userStore";
+import { LoginResponse, ServerErrorPopUp } from "./SignUp";
+import { NextRouter, useRouter } from "next/router";
 import { useState } from "react";
 
-const Login: NextPage = () => {
+type Props = {
+    setName: (name: string) => void,
+    setEmail: (email: string) => void,
+    router: NextRouter,
+    setServerError: (param: string) => void
+}
+
+function SignIn() {
     const { name, email, setName, setEmail } = userStore();
     const router = useRouter();
     const [serverError, setServerError] = useState("");
@@ -17,11 +23,16 @@ const Login: NextPage = () => {
     }
 
     return (
-        <div className="w-screen h-screen">
-            <div className="grid w-screen h-1/5 bg-red-300 place-items-center">
-                <h1 className="align-middle text-7xl font-sans">Login</h1>
-            </div>
-            <div className="grid w-screen h-4/5 place-items-center grid-rows-3">
+        <div>
+            {serverError? <ServerErrorPopUp message={serverError} alter={alterServerError}/> : 
+            <SignUpFormInternal setName={setName} setEmail={setEmail} router={router} setServerError={setServerError}/>}
+        </div>
+    );
+};
+
+function SignUpFormInternal( {setName, setEmail, router, setServerError } : Props ) {
+    return (
+        <div>
                 <Formik
                     initialValues={{ email: '', password: '' }}
                     validate={values => {
@@ -35,7 +46,7 @@ const Login: NextPage = () => {
                         }
                         return errors;
                     }}
-                    onSubmit={ async (values, { setSubmitting }) => {
+                    onSubmit={ async (values, { setSubmitting, resetForm }) => {
                         let err = false;
                         let verified = false;
 
@@ -66,11 +77,8 @@ const Login: NextPage = () => {
                             }
 
                         } catch (error) {
-                            if(error instanceof Error) {
-                                console.log('error message: ', error.message);
-                            } else {
-                                console.log('unexpected error: ', error);
-                            }
+                            setServerError("Something went wrong, check the db connection");
+                            err = true;
                         }
                         
                         if(!err) {
@@ -82,6 +90,7 @@ const Login: NextPage = () => {
                             return;
                         }
 
+                        resetForm();
                     }}
                 >
                     {({
@@ -98,7 +107,7 @@ const Login: NextPage = () => {
                                 <div>Password</div>
                                 <Field type="password" name="password" className="input" />
                             </label>
-                            <ErrorMessage name="email" component="div" className="text-red-400" />
+                            <ErrorMessage name="password" component="div" className="text-red-400" />
                             <br/>
                             <button type="submit" disabled={isSubmitting} className="text border-2 border-black p-1 px-2 rounded-lg mt-3 float-right">
                                 Login
@@ -107,9 +116,7 @@ const Login: NextPage = () => {
                     )}
                 </Formik>
             </div>
-            {serverError? <ServerErrorPopUp message={serverError} alter={alterServerError}/> : <></>}
-        </div>
-    );
-};
+    )
+}
 
-export default Login;
+export default SignIn;

@@ -47,6 +47,9 @@ async function sendEmail(addressee: string, subject: string, body: string) {
       pass: smtpPassword,
     },
     debug: true,
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 
   const mailOptions = {

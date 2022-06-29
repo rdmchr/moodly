@@ -72,7 +72,7 @@ export default async function handler(
   });
   prisma.$disconnect();
 
-  //await sendVerificationEmail(email, name, newUser.id);
+  await sendVerificationEmail(email, name, newUser.id);
   const jwtToken = await createJWT(newUser.id, name);
 
   return res
@@ -83,7 +83,7 @@ export default async function handler(
         id: newUser.id,
         email: newUser.email,
         name: newUser.name,
-        verified: true,
+        verified: false,
       },
     });
 }

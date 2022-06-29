@@ -2,6 +2,72 @@
 @tailwind components;
 @tailwind utilities;
 
+*{
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
 .input {
     @apply border-2 border-black text-lg rounded-lg p-1
+}
+
+.body {
+    background: #03a9f4;
+    transition: 0.5s;
+}
+
+.activeBody {
+    background: #f43648;
+    transition: 0.5s;
+}
+
+.container {
+    width: 800px;
+    height: 500px;
+}
+
+.blueBg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    top: 40px;
+    height: 420px;
+    background: rgba(255,255,255,0.2);
+    box-shadow: 0 5px 45px rgba(0,0,0,0.15);
+}
+
+.blueBg .box h2 {
+    font-size: 1.2em;
+    font-weight: 500;
+}
+
+.blueBg .box button {
+    cursor: pointer;
+    padding: 10px 20px;
+    background: white;
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+}
+
+.formBx {
+    background: white;
+    z-index: 1000;
+    box-shadow: 0 5px 45px rgba(0,0,0,0.25);
+    transition: 0.5s ease-in-out;
+    overflow: hidden;
+}
+
+.hideLeft {
+    left: -100%;
+}
+
+.hideRight {
+    left: 200%;
+}
+
+.form {
+    padding: 75px;
+    transition: 0.5s;
 }
