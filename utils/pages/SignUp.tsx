@@ -1,7 +1,7 @@
 import type { NextPage } from "next";
-import { ErrorMessage, Field, Form, Formik, isObject } from "Formik";
+import { ErrorMessage, Field, Form, Formik, FormikProps, isObject } from "Formik";
 import { stringify, stringifyUrl } from "query-string";
-import { useState } from "react";
+import { useRef, useState, useEffect } from 'react';
 import userStore from "../../dataStores/userStore";
 import router, { NextRouter, useRouter } from 'next/router';
 import CarbonClose from "../../icons/CarbonClose";
@@ -26,6 +26,12 @@ type SignUpProps = {
     setEmail: (email: string) => void,
     router: NextRouter,
     setServerError: (param: string) => void
+}
+type FormValues = {
+    name: string,
+    email: string, 
+    password: string,
+    check: string
 }
 
 function SignUp() {
@@ -58,17 +64,23 @@ export function ServerErrorPopUp({ message, alter }: Props) {
 }
 
 function SignUpFormInternal({ setName, setEmail, router, setServerError }: SignUpProps) {
+
+    const signUpFormRef = useRef<FormikProps<FormValues>>(null);
+    useEffect(() => {
+        signUpFormRef.current?.resetForm();
+    });
+
     return (
         <div>
             <Formik
                 initialValues={{ name: '', email: '', password: '', check: '' }}
+                //innerRef={signUpFormRef}
                 validate={values => {
                     const errors: { email?: any, password?: any, name?: any, check?: any } = {};
                     if (!values.email) {
                         errors.email = 'Required'
                     } else if (
-                        // !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email)
-                        errors.email = ''
+                        !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(values.email as string)
                     ) {
                         errors.email = 'Invalid email address';
                     }
@@ -79,6 +91,8 @@ function SignUpFormInternal({ setName, setEmail, router, setServerError }: SignU
                 }}
                 onSubmit={async (values, { setSubmitting }) => {
                     let err: boolean = false;
+
+                    console.log("trying to submit");
 
                     try {
                         const response: Response = await fetch('/api/v1/signup', {
@@ -96,6 +110,8 @@ function SignUpFormInternal({ setName, setEmail, router, setServerError }: SignU
 
                         const result: LoginResponse = (await response.json()) as LoginResponse;
 
+                        console.log(result);
+
 
                         if (result.error) {
                             setServerError(result.error);
@@ -111,6 +127,8 @@ function SignUpFormInternal({ setName, setEmail, router, setServerError }: SignU
                         setServerError("Something went wrong, check the db connection");
                         err = true;
                     }
+
+                    console.log(err);
 
                     if (!err) {
                         router.push('/emailVerification');
